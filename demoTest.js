@@ -186,14 +186,11 @@ describe('Dokumnety źródłowe', function() {
         cy.get('[seleniumid="DokumentSprzedazyInformacjeOgolneEditV"]').contains('a', "Dalej").click(); //kliknięcie przyciska Dalej
         
         //drugie okno dokumentu
-        cy.get('.x-field-toolbar.x-hbox-form-item.x-form-dirty input').click() //klikam w inputa pola Przeliczenie VAT
-        .invoke('attr', 'data-componentid')                                                          //wybieram wartość Od netto do pola Przeliczenie VAT
-        .then(($dataComponentid) => {
-            cy.get("#" +  $dataComponentid +"-picker-listWrap").contains('li', "Od netto").click({force: true});
-        });
-        cy.get('.x-grid-cell-ncolumn-1369.x-grid-cell-first.x-unselectable').click(); //wprzejscie do komórki Nazwa towaru i usługi
+        przeliczenieVAT()
+        let wiersz = '.x-panel-body.x-grid-with-col-lines.x-grid-with-row-lines.x-grid-body.x-grid-locking-body.x-panel-body-default.x-box-layout-ct.x-panel-body-default .x-grid-scroll-body.x-scroller'
+        cy.get(wiersz + " " + 'div:nth-child(2) td:first-child').click(); //wprzejscie do komórki Nazwa towaru i usługi
         cy.get('.x-form-text-field-body-grid-cell input').type("Nazwa towaru/usługi 1"); //wpisanie do inputa nazwy towaru/usługi
-        cy.get('.x-grid-cell-ncolumn-1369.x-grid-cell-first.x-unselectable').nextAll('td:nth-child(4)').click(); 
+        cy.get(wiersz + " " + 'div:nth-child(2) td:first-child').nextAll('td:nth-child(4)').click(); 
         cy.get('.x-form-text-wrap-focus input').type("1000"); //wpisanie do inputa kwoty netto 1000
         cy.get('.x-window.x-layer.x-window-default.x-border-box[aria-hidden="false"]').contains('a:nth-child(5)', "Zapisz").click(); //Kliknij Zapisz 
         cy.get('.x-container.x-border-item.x-box-item.x-container-default.x-border-layout-ct').contains('a', "Ogólne").should('have.attr', 'aria-selected', "true"); 
