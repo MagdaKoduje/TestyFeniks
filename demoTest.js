@@ -197,4 +197,34 @@ describe('Dokumnety źródłowe', function() {
         //sprawdzenie czy po zapisaniu dokument otworzył się na zakładce Ogólne
 
     });
+
+    it.only("Dodanie faktury zakupu", function () {
+        loginToPage();
+        cy.get('#ribbon-view-innerCt', {timeout: 10000}).contains('a', "Dokumenty źródłowe").click(); //klikam w okumenty źródłowe
+        cy.get('#ribbon-view-tab-body').contains('a', "Dokumenty zakupu").click(); //Klikam w Dokumenty zakupu
+        cy.get('#master-container').contains('a', "Dodaj").click(); //dodanie dokumentu zakupu
+        cy.get('[seleniumid="DokumentZakupuInformacjeOgolneEditV"]').should('be.visible'); //sprawdzenie czy okno się otworzyło
+        cy.get('[seleniumid="Nr dok. źródłowego"] input').type("Dokument zakupu " + randomString(5, 'number')); // uzupełnienie nr dokumentu
+        cy.get('[seleniumid="Kontrahent"] input').type('{downArrow}', {timeout:5000}) //wejście do inputa i danie strzałki w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box .x-grid-item-container table:first-child tr > td:first-child > div').click({force: true}); //wybranie pierwszego kontrahenta z listy
+        cy.get('[seleniumid="Forma płatności"] input').type('{downArrow}', {timeout:5000});//wejście do inputa i danie strzałki w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box[aria-hidden="false"]').contains('div', "Forma płatności 5145").click() //wybranie płatności o nazwie "Forma płatności 5145"
+        cy.get('[seleniumid="Konto bankowe jednostki"] input').type('{downArrow}', {timeout:5000}) //wchodze w input konta bankowego i klikam strzałkę w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box.x-panel-above[aria-hidden="false"]').contains('div', "Esbank").click(); //wybieram Esbank
+        cy.get('[seleniumid="Dziennik"] input').type('{downArrow}', {timeout:5000}); //wchodze do inputa pola dziennik i daję strzałkę w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box.x-panel-above[aria-hidden="false"]').contains('div', "Dziennik 2022").click();//Wybieram dziennik "Dziennik 2022"
+        cy.get('.x-window.x-layer.x-window-default.x-border-box').contains('a', "Dalej").click(); //Kliknij Dalej
+        cy.get('[seleniumid="DokumentZakupuPozycjeEditV"]').should('be.visible'); //drugie okno dokumentu powinno być otwarte
+        przeliczenieVAT()
+        let wiersz = '.x-grid-with-row-lines.x-grid-body.x-grid-locking-body.x-panel-body-default.x-box-layout-ct.x-panel-body-default .x-grid-scroll-body.x-scroller div:nth-child(2)'
+        //zdefiniowane zmiennej
+        cy.get(wiersz + " " + 'td:first-child').click();
+        cy.get('.x-form-text-field-body.x-form-text-field-body-grid-cell input').type("Nazwa towaru 1")//uzpełniam nazwę towaru
+        cy.get(wiersz + " " + 'td:nth-child(5)').click();
+        cy.get('.x-form-text-field-body.x-form-text-field-body-grid-cell input').type("1000")//uzpełniam kwotę
+        cy.get('.x-toolbar.x-docked.x-toolbar-footer.x-box-layout-ct [aria-hidden="false"]').contains('a', "Zapisz").click() //klikam Zapisz
+        cy.get('.x-container.x-border-item.x-box-item.x-container-default.x-border-layout-ct').contains('a', "Ogólne").should('have.attr', 'aria-selected', "true");
+        //sprawdzenie czy dokument otworzył się na zakładce ogólne
+        
+    });
 });
