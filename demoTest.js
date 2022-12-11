@@ -15,20 +15,38 @@ function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1) + min)}; // The maximum is inclus
+
+function ustawRok() {
+    let biezacyRok = new Date().getFullYear();
+    cy.get('[seleniumid="Rok"] input')      //zmieniam rok na bieżący
+        .invoke('attr', 'value', biezacyRok)
+        .should('have.attr', 'value', biezacyRok);
+}
     
-
-
-let page = "https://feniks.vdpo.pl/patrycja/";
-
 function loginToPage(login = "demo", password = "demo") {
-  cy.visit(page); //wejdź na stronę
-  cy.get("#37787 table tbody tr:nth-child(1) td:nth-child(1) a").click(); //wybierz jednostkę
-  cy.url().should("include", "37787"); // sprawdź czy jesteś na dobrej jednostce
+    let page = "https://feniks.vdpo.pl/patrycja/"
+    cy.visit(page); //wejdź na stronę
+    cy.get("#37787 table tbody tr:nth-child(1) td:nth-child(1) a").click(); //wybierz jednostkę
+    cy.url().should("include", "37787"); // sprawdź czy jesteś na dobrej jednostce
+}
+
+function przeliczenieVAT() {
+    cy.get('.x-field-toolbar.x-hbox-form-item.x-form-dirty input').click() //klikam w inputa pola Przeliczenie VAT
+    .invoke('attr', 'data-componentid')                                                          //wybieram wartość Od netto do pola Przeliczenie VAT
+    .then(($dataComponentid) => {
+        cy.get("#" +  $dataComponentid +"-picker-listWrap").contains('li', "Od netto").click({force: true});
+    })
+}
+
+function wybierzModuł (moduł, podmoduł) {
+    cy.get('#ribbon-view-innerCt', {timeout:10000}).contains('a', moduł).click()    
+    cy.get('#ribbon-view-tab-body', {timeout:10000}).contains('a', podmoduł).click() //klikam w nota księgowa  
 }
 
 let formaPlatnosci = "Forma płatności " + randomString(4, 'number');
 let wzorzecOprocentowaniaSkrót = "Skrót wzorca " + randomString(4, 'number');
 let wzorzecOprocentowaniaNazwa = "Wzorzec oprocentowania " + randomString(4, 'number');
+
 
 
 describe("Testy słownika", function () {
@@ -153,7 +171,6 @@ describe("Testy jednostki", function () {
         cy.get('[seleniumid="Telefon komórkowy"] input').type(numerTelefonu);
         cy.get('[seleniumid="DaneAdresoweEditV"]').contains('a', "Zapisz").click();
         cy.get('[seleniumid="Dane adresowe"]').contains(numerTelefonu).should('exist');
-
 });
 });
 
@@ -161,12 +178,9 @@ describe('Dokumnety źródłowe', function() {
     it("Dodanie Faktury VAT sprzedaży", function () {
         let wartoscCombo = '.x-panel.x-layer.x-panel-default.x-grid.x-border-box[aria-hidden="false"] .x-grid-body';
         loginToPage();
-        cy.get('#ribbon-view-innerCt', {timeout: 10000}).contains('a', "Dokumenty źródłowe").click(); //klikam w Dokumenty źródłowe
-        cy.get('#ribbon-view-tab-body').contains('a', "Dokumenty sprzedaży").click(); //klikam Dokumnety sprzedaży
-        let biezacyRok = new Date().getFullYear();
-        cy.get('[seleniumid="Rok"] input')      //zmieniam rok na bieżący
-        .invoke('attr', 'value', biezacyRok)
-        .should('have.attr', 'value', biezacyRok);
+        wybierzModuł("Dokumenty źródłowe", "Dokumenty sprzedaży")
+        ustawRok();
+        
         //pierwsze okno dokumentu
         cy.get('#center-container').contains('a', "Dodaj").click();  //Klikam Dodaj
         cy.get('[seleniumid="Wzorzec numeracji"] input').type('{downArrow}').wait(10000);  //klikam w input pola Wzorzec numeracji, strzałka w dół
@@ -195,13 +209,12 @@ describe('Dokumnety źródłowe', function() {
         cy.get('.x-window.x-layer.x-window-default.x-border-box[aria-hidden="false"]').contains('a:nth-child(5)', "Zapisz").click(); //Kliknij Zapisz 
         cy.get('.x-container.x-border-item.x-box-item.x-container-default.x-border-layout-ct').contains('a', "Ogólne").should('have.attr', 'aria-selected', "true"); 
         //sprawdzenie czy po zapisaniu dokument otworzył się na zakładce Ogólne
-
     });
 
-    it.only("Dodanie faktury zakupu", function () {
+    it("Dodanie faktury zakupu", function () {
         loginToPage();
-        cy.get('#ribbon-view-innerCt', {timeout: 10000}).contains('a', "Dokumenty źródłowe").click(); //klikam w okumenty źródłowe
-        cy.get('#ribbon-view-tab-body').contains('a', "Dokumenty zakupu").click(); //Klikam w Dokumenty zakupu
+        wybierzModuł("Dokumenty źródłowe", "Dokumenty zakupu")
+        ustawRok();
         cy.get('#master-container').contains('a', "Dodaj").click(); //dodanie dokumentu zakupu
         cy.get('[seleniumid="DokumentZakupuInformacjeOgolneEditV"]').should('be.visible'); //sprawdzenie czy okno się otworzyło
         cy.get('[seleniumid="Nr dok. źródłowego"] input').type("Dokument zakupu " + randomString(5, 'number')); // uzupełnienie nr dokumentu
@@ -216,7 +229,7 @@ describe('Dokumnety źródłowe', function() {
         cy.get('.x-window.x-layer.x-window-default.x-border-box').contains('a', "Dalej").click(); //Kliknij Dalej
         cy.get('[seleniumid="DokumentZakupuPozycjeEditV"]').should('be.visible'); //drugie okno dokumentu powinno być otwarte
         przeliczenieVAT()
-        let wiersz = '.x-grid-with-row-lines.x-grid-body.x-grid-locking-body.x-panel-body-default.x-box-layout-ct.x-panel-body-default .x-grid-scroll-body.x-scroller div:nth-child(2)'
+        let wiersz = '.x-grid-with-row-lines.x-grid-body.x-grid-locking-body.x-panel-body-default.x-box-layout-ct.x-panel-body-default .x-grid-scroll-body.x-scroller > div:nth-child(2)'
         //zdefiniowane zmiennej
         cy.get(wiersz + " " + 'td:first-child').click();
         cy.get('.x-form-text-field-body.x-form-text-field-body-grid-cell input').type("Nazwa towaru 1")//uzpełniam nazwę towaru
@@ -224,7 +237,32 @@ describe('Dokumnety źródłowe', function() {
         cy.get('.x-form-text-field-body.x-form-text-field-body-grid-cell input').type("1000")//uzpełniam kwotę
         cy.get('.x-toolbar.x-docked.x-toolbar-footer.x-box-layout-ct [aria-hidden="false"]').contains('a', "Zapisz").click() //klikam Zapisz
         cy.get('.x-container.x-border-item.x-box-item.x-container-default.x-border-layout-ct').contains('a', "Ogólne").should('have.attr', 'aria-selected', "true");
-        //sprawdzenie czy dokument otworzył się na zakładce ogólne
-        
+        //sprawdzenie czy dokument otworzył się na zakładce ogólne       
     });
+
+    it("Dodanie noty księgowej własnej", function() {
+        loginToPage(); //loguję się
+        wybierzModuł("Dokumenty źródłowe", "Noty księgowe własne") //wybranie Not ksiegowych własnych
+        ustawRok(); //ustawiam rok
+        cy.get('.x-box-item.x-container-default.x-border-layout-ct').contains('a', "Dodaj").click(); //Wybieram Dodaj
+        cy.get('[seleniumid="NotaKsiegowaWlasnaInformacjeOgolneEditV"]').should('be.visible'); //Sprawdzam czy okno dokumentu się dodało
+        cy.get('[seleniumid="Wzorzec numeracji"] input').type('{downArrow}'); //w polu wzorzec numeracji klikam strzałkę w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box table:first-child tr td:first-child').click({force: true}); //wybieram pierwszy wzorzec numeracji z listy
+        cy.get('[seleniumid="Kontrahent"] input').type('{downArrow}'); //w polu Kontrahent klikam strzałkę w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box[aria-hidden="false"]').contains('div', "1. Dębski").click(); //Wybieram kontrahenta o nazwie "1. Dębski"
+        cy.get('[seleniumid="Forma płatności"] input').type('{downArrow}'); //w polu Forma płatnosci klikam strzałkę w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box[aria-hidden="false"]').contains('div', "przelew 15 dni").click()//wybieram wartośc z combo "przelew 15 dni"
+        cy.get('[seleniumid="Dziennik"] input').type('{downArrow}'); //w polu dziennik klikam strzałkę w dół
+        cy.get('.x-panel.x-layer.x-panel-default.x-grid.x-border-box.x-panel-above').contains('div', "Dziennik 2022").click(); //Wybieram wartość z combo "Dziennik 2022"
+        cy.get('.x-toolbar.x-docked.x-toolbar-footer.x-box-layout-ct').contains('a', "Dalej").click();//Klikam przycisk Dalje
+        let wiersz = '.x-grid-with-row-lines.x-grid-body.x-grid-locking-body.x-panel-body-default.x-box-layout-ct.x-panel-body-default .x-grid-scroll-body.x-scroller > div:nth-child(3)'
+        cy.get(wiersz + " " + 'td:nth-child(2)').click(); //wybieram pole Nota księgowa opis
+        cy.get('.x-layer.x-editor-default.x-border-box input').type("Nota księgowa opis"); //klikam inputa i wpisuję opis "Nota księgowa opis"
+        cy.get(wiersz + " " + 'td:nth-child(3)').click(); //wybieram pole Kwota brutto
+        cy.get('.x-form-item-no-label.x-field-focus input').type("1000"); //klikam inputa i wpisuję kwotę "1000"
+        cy.get('.x-toolbar.x-docked.x-toolbar-footer.x-box-layout-ct [aria-hidden="false"]').contains('a', "Zapisz").click({force: true}); //klikam zapisz
+        cy.get('.x-container.x-border-item.x-box-item.x-container-default.x-border-layout-ct').contains('a', "Ogólne").should('have.attr', 'aria-selected', "true"); 
+        //sprawdzam czy po zapisaniu dokument otworzył się na zakładce ogólne
+    });
+
 });
